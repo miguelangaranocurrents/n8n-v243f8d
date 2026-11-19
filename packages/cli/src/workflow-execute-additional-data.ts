@@ -89,8 +89,11 @@ export function getRunData(
 	workflowData: IWorkflowBase,
 	inputData?: INodeExecutionData[],
 	parentExecution?: RelatedExecution,
+	parentMode?: WorkflowExecuteMode,
 ): IWorkflowExecutionDataProcess {
-	const mode = 'integrated';
+	// Keep manual and chat mode in nested sub-workflows so they still load draft versions.
+	const mode: WorkflowExecuteMode =
+		parentMode === 'manual' || parentMode === 'chat' ? parentMode : 'integrated';
 
 	const startingNode = findSubworkflowStart(workflowData.nodes);
 
@@ -336,7 +339,8 @@ export async function executeWorkflow(
 				));
 
 	const runData =
-		options.loadedRunData ?? getRunData(workflowData, options.inputData, options.parentExecution);
+		options.loadedRunData ??
+		getRunData(workflowData, options.inputData, options.parentExecution, options.executionMode);
 
 	if (runData.executionData) {
 		runData.executionData.subWorkflowOutput ??= getSubWorkflowOutputPolicy(
